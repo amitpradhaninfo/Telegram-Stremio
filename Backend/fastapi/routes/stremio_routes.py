@@ -34,9 +34,6 @@ ADDON_NAME = "Telegram"
 ADDON_VERSION = __version__
 PAGE_SIZE = 15
 
-def _donation():
-    return {"name": "⭐ Donation needed.", "title": "Click here to donate to keep the project alive.", "externalUrl": "https://donate.weebzonex.workers.dev"}
-
 def build_proxy_url(original_url: str) -> str | None:
     settings = SettingsManager.current()
     base = settings.http_proxy_url
@@ -309,21 +306,21 @@ def format_released_date(media):
 
 #----- Build a Stremio stream display name/title from a filename
 def format_stream_details(filename: str, quality: str, size: str, is_split: bool = False) -> tuple[str, str]:
-    size_emoji = "📦" if is_split else "💾"
+    size_emoji = "ðŸ“¦" if is_split else "ðŸ’¾"
     try:
         parsed = PTN.parse(filename)
     except Exception:
-        return (f"Telegram {quality}", f"📁 {filename}\n{size_emoji} {size}")
+        return (f"Telegram {quality}", f"ðŸ“ {filename}\n{size_emoji} {size}")
 
     codec_parts = []
     if parsed.get("codec"):
-        codec_parts.append(f"🎥 {parsed.get('codec')}")
+        codec_parts.append(f"ðŸŽ¥ {parsed.get('codec')}")
     if parsed.get("bitDepth"):
-        codec_parts.append(f"🌈 {parsed.get('bitDepth')}bit")
+        codec_parts.append(f"ðŸŒˆ {parsed.get('bitDepth')}bit")
     if parsed.get("audio"):
-        codec_parts.append(f"🔊 {parsed.get('audio')}")
+        codec_parts.append(f"ðŸ”Š {parsed.get('audio')}")
     if parsed.get("encoder"):
-        codec_parts.append(f"👤 {parsed.get('encoder')}")
+        codec_parts.append(f"ðŸ‘¤ {parsed.get('encoder')}")
 
     codec_info = " ".join(codec_parts) if codec_parts else ""
 
@@ -332,7 +329,7 @@ def format_stream_details(filename: str, quality: str, size: str, is_split: bool
     stream_name = f"Telegram {resolution} {quality_type}".strip()
 
     stream_title_parts = [
-        f"📁 {filename}",
+        f"ðŸ“ {filename}",
         f"{size_emoji} {size}",
     ]
     if codec_info:
@@ -498,7 +495,7 @@ async def get_manifest(token: str, token_data: dict = Depends(verify_token)):
         if expiry_obj:
             expiry_str = expiry_obj.strftime("%d %b %Y").lstrip("0")
             addon_desc = (
-                f"📅 Access active until {expiry_str}.\n"
+                f"ðŸ“… Access active until {expiry_str}.\n"
                 f"Streams movies and series from your Telegram."
             )
             epoch_tag = format(int(expiry_obj.timestamp()) & 0xFFFF, "x")
@@ -771,11 +768,11 @@ def _streams_from_global_results(token: str, global_results: list) -> list:
     for r in global_results:
         is_split = bool(r.get("is_split"))
         _, stream_title = format_stream_details(r["title"], r["quality"], r["size"], is_split=is_split)
-        stream_name = f"🌐 GLOBAL {r['quality']}"
-        stream_title = f"{stream_title}\n📡 {r['source_chat']}"
+        stream_name = f"ðŸŒ GLOBAL {r['quality']}"
+        stream_title = f"{stream_title}\nðŸ“¡ {r['source_chat']}"
         if is_split:
             kind = "zip parts" if r.get("is_zip") else "parts"
-            stream_title += f" · 📦 {r.get('part_count', 0)} {kind}"
+            stream_title += f" Â· ðŸ“¦ {r.get('part_count', 0)} {kind}"
         url = f"{SettingsManager.current().base_url}/dl/{token}/{r['token']}/{quote(r['title'])}"
         size_bytes = parse_size_to_bytes(r.get("size", ""))
         streams.append({"name": stream_name, "title": stream_title, "url": url, "size_bytes": size_bytes})
@@ -864,7 +861,7 @@ async def _global_streams_for(
         search_episode = int(abs_ep)
         LOGGER.info(
             f"[GLOBAL SEARCH] Anime mapped S{int(season_num):02d}E{int(episode_num):02d} "
-            f"→ absolute {int(abs_ep)} for '{expected_title}'"
+            f"â†’ absolute {int(abs_ep)} for '{expected_title}'"
             + (f" (via {map_source})" if map_source else "")
             + "; trying absolute first"
         )
@@ -954,7 +951,7 @@ async def get_streams(
         return {
             "streams": [
                 {
-                    "name": "🚫 Plan Expired",
+                    "name": "ðŸš« Plan Expired",
                     "title": "Your plan is expired.\nRenew it from the bot to continue watching.",
                     "url": get_streambot_url()
                 }
@@ -972,7 +969,7 @@ async def get_streams(
             return {
                 "streams": [
                     {
-                        "name": "📢 Join Required",
+                        "name": "ðŸ“¢ Join Required",
                         "title": "First join the channel to stream it.\nThen wait for 2 min for verification",
                         "url": get_streambot_url()
                     }
@@ -983,9 +980,9 @@ async def get_streams(
         limit_type = token_data["limit_exceeded"]
 
         title = (
-            "🚫 Daily Limit Reached – Upgrade Required"
+            "ðŸš« Daily Limit Reached â€“ Upgrade Required"
             if limit_type == "daily"
-            else "🚫 Monthly Limit Reached – Upgrade Required"
+            else "ðŸš« Monthly Limit Reached â€“ Upgrade Required"
         )
 
         return {
@@ -1087,7 +1084,7 @@ async def get_streams(
             streams = filtered
 
     if not streams:
-        return {"streams": [_donation()]}
+        return {"streams": []}
 
     ascending = config.get("quality_sort") == "asc"
     if is_combined:
@@ -1108,7 +1105,6 @@ async def get_streams(
         if name_count[s["name"]] > 1:
             seen[s["name"]] = seen.get(s["name"], 0) + 1
             s["name"] = f"{s['name']} ({seen[s['name']]})"
-    streams.insert(0, _donation())
     return {"streams": streams}
 
 #----- Configure/install landing page rendered as HTML for a token
